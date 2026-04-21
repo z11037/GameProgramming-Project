@@ -2,30 +2,41 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    public float gridSize = 1f;
-    private bool canMove = true;
+    public float moveSmooth = 18f;
+    private Vector2Int currentGridPos;
+    private Vector2 targetWorldPos;
+    private bool isMoving;
+    private float moveGap = 0.25f;
+    void Start()
+    {
+        currentGridPos = GridManager.Instance.WorldToGrid(transform.position);
+        targetWorldPos = GridManager.Instance.GridToWorld(currentGridPos);
+        transform.position = targetWorldPos;
+    }
 
     void Update()
     {
-        if (!canMove) return;
+        transform.position = Vector2.Lerp(transform.position, targetWorldPos, moveSmooth * Time.deltaTime);
 
-        if (Input.GetKeyDown(KeyCode.W)) Move(Vector2.up);
-        if (Input.GetKeyDown(KeyCode.S)) Move(Vector2.down);
-        if (Input.GetKeyDown(KeyCode.A)) Move(Vector2.left);
-        if (Input.GetKeyDown(KeyCode.D)) Move(Vector2.right);
+        if (Vector2.Distance(transform.position, targetWorldPos) < 0.01f && !isMoving)
+        {
+            if (Input.GetKey(KeyCode.W)) MoveToGrid(Vector2Int.up);
+            else if (Input.GetKey(KeyCode.S)) MoveToGrid(Vector2Int.down);
+            else if (Input.GetKey(KeyCode.A)) MoveToGrid(Vector2Int.left);
+            else if (Input.GetKey(KeyCode.D)) MoveToGrid(Vector2Int.right);
+        }
     }
 
-    void Move(Vector2 direction)
+    void MoveToGrid(Vector2Int dir)
     {
-        Vector2 targetPos = (Vector2)transform.position + direction * gridSize;
-        transform.position = targetPos;
-
-        canMove = false;
-        Invoke(nameof(MoveCooldown), 0.12f);
+        currentGridPos += dir;
+        targetWorldPos = GridManager.Instance.GridToWorld(currentGridPos);
+        isMoving = true;
+        Invoke(nameof(MoveEnd), moveGap);
     }
 
-    void MoveCooldown()
+    void MoveEnd()
     {
-        canMove = true;
+        isMoving = false;
     }
 }
