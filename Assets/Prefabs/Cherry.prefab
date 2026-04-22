@@ -143,8 +143,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cb4cf7274600d1843b4745ab5773260a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  type: 5
+  type: 6
+  textType: 0
+  textContent: 0
   isYou: 0
   isStop: 0
   isPush: 0
   isWin: 0
+  moveLerpSpeed: 20

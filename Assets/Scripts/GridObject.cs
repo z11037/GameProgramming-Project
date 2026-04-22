@@ -3,8 +3,14 @@ using UnityEngine;
 [ExecuteInEditMode]
 public class GridObject : MonoBehaviour
 {
-    public enum ObjectType { Empty, Wall, Rock, Player, Text }
+    public enum ObjectType { Empty, Wall, Rock, Player, Text, Man, Cherry }
     public ObjectType type;
+
+    public enum TextType { None, Noun, Verb, Property }
+    [Header("Text")]
+    public TextType textType;
+    public enum TextContent { None, Man, Wall, Rock, Cherry, Is, You, Stop, Push, Win }
+    public TextContent textContent;
 
     [Header("Rule")]
     public bool isYou;
@@ -41,6 +47,10 @@ public class GridObject : MonoBehaviour
             TargetGridPos = gridPos;
             targetWorldPos = transform.position;
         }
+        if (type == ObjectType.Text)
+        {
+            isPush = true;
+        }
     }
 
     private void Start()
@@ -58,6 +68,14 @@ public class GridObject : MonoBehaviour
         {
             targetWorldPos = GridManager.Instance.GridToWorld(target);
         }
+    }
+
+    public void ResetRuleProperties()
+    {
+        isYou = false;
+        isStop = false;
+        isPush = type == ObjectType.Text;
+        isWin = false;
     }
     private void Update()
     {
