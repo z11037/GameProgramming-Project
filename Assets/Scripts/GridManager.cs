@@ -14,10 +14,6 @@ public class GridManager : MonoBehaviour
         {
             Instance = this;
         }
-        else
-        {
-            Destroy(gameObject);
-        }
     }
 
     private Vector2 GridOffset => new(gridUnit * 0.5f, gridUnit * 0.5f);

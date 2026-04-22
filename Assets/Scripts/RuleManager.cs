@@ -51,8 +51,6 @@ public class RuleManager : MonoBehaviour
         }
 
         List<ValidRule> validRules = ScanAllValidRules();
-        ApplyRules(validRules, allObjects);
-        Debug.Log($"扫描到有效规则数量：{validRules.Count}");
     }
 
     private List<ValidRule> ScanAllValidRules()
@@ -65,7 +63,6 @@ public class RuleManager : MonoBehaviour
             textPosDic[textObj.TargetGridPos] = textObj;
         }
 
-        // 横向规则扫描
         foreach (var textObj in allTextObjects)
         {
             if (textObj.textType != GridObject.TextType.Noun) continue;
@@ -88,7 +85,6 @@ public class RuleManager : MonoBehaviour
             }
         }
 
-        // 纵向规则扫描
         foreach (var textObj in allTextObjects)
         {
             if (textObj.textType != GridObject.TextType.Noun) continue;
@@ -122,7 +118,6 @@ public class RuleManager : MonoBehaviour
 
             foreach (var obj in targetObjects)
             {
-                // 属性规则
                 if (rule.targetType == GridObject.TextType.Property)
                 {
                     switch (rule.target)
@@ -142,7 +137,6 @@ public class RuleManager : MonoBehaviour
                     }
                 }
 
-                // 类型转换规则
                 if (rule.targetType == GridObject.TextType.Noun)
                 {
                     obj.type = NounToObjectType(rule.target);
@@ -151,7 +145,6 @@ public class RuleManager : MonoBehaviour
         }
     }
 
-    // 仅保留你现有资源的类型转换
     private GridObject.ObjectType NounToObjectType(GridObject.TextContent noun)
     {
         switch (noun)

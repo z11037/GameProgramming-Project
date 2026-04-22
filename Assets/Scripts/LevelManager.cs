@@ -39,7 +39,6 @@ public class LevelManager : MonoBehaviour
         if (obj.type == GridObject.ObjectType.Text)
         {
             RuleManager.Instance.RegisterTextObject(obj);
-            Debug.Log($"注册文字方块成功：{obj.textContent}，位置：{obj.TargetGridPos}");
         }
     }
 
@@ -70,10 +69,8 @@ public class LevelManager : MonoBehaviour
 
         foreach (var youObj in allYouObjects)
         {
-            // 情况1：isYou物体本身就是isWin（比如 Man Is Win）
             if (youObj.isWin) return true;
 
-            // 情况2：isYou物体和isWin物体在同一个格子（比如 Man 走到 Cherry 上，Cherry Is Win）
             if (gridDic.TryGetValue(youObj.TargetGridPos, out GridObject targetObj))
             {
                 if (targetObj.isWin && targetObj != youObj) return true;
@@ -93,7 +90,6 @@ public class LevelManager : MonoBehaviour
         return result;
     }
 
-    // 仅保留你现有资源的类型转换
     private GridObject.ObjectType NounToObjectType(GridObject.TextContent noun)
     {
         switch (noun)
@@ -106,7 +102,6 @@ public class LevelManager : MonoBehaviour
         }
     }
 
-    // 原有核心移动逻辑完全不动
     public bool TryMove(GridObject obj, Vector2Int dir)
     {
         if (obj == null || dir == Vector2Int.zero) return false;
