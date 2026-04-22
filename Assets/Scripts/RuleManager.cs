@@ -51,6 +51,7 @@ public class RuleManager : MonoBehaviour
         }
 
         List<ValidRule> validRules = ScanAllValidRules();
+        ApplyRules(validRules, allObjects);
     }
 
     private List<ValidRule> ScanAllValidRules()

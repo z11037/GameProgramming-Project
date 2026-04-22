@@ -2,7 +2,31 @@ using UnityEngine;
 
 public class GridManager : MonoBehaviour
 {
-    public static GridManager Instance;
+    private static GridManager _instance;
+    private static readonly object _lock = new object();
+
+    public static GridManager Instance
+    {
+        get
+        {
+            if (_instance != null) return _instance;
+
+            lock (_lock)
+            {
+                if (_instance != null) return _instance;
+
+                _instance = FindObjectOfType<GridManager>();
+
+                if (_instance == null)
+                {
+                    GameObject temp = new GameObject("GridManager");
+                    _instance = temp.AddComponent<GridManager>();
+                }
+            }
+
+            return _instance;
+        }
+    }
 
     public float gridUnit = 0.6f;
     public int gridRange = 30;
@@ -10,10 +34,14 @@ public class GridManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null)
+        // Awake里立即处理单例：如果已有实例，销毁自己
+        if (_instance != null && _instance != this)
         {
-            Instance = this;
+            Destroy(gameObject);
+            return;
         }
+
+        _instance = this;
     }
 
     private Vector2 GridOffset => new(gridUnit * 0.5f, gridUnit * 0.5f);
@@ -38,8 +66,8 @@ public class GridManager : MonoBehaviour
     {
         Gizmos.color = gridColor;
         for (int x = -gridRange; x <= gridRange; x++)
-            Gizmos.DrawLine(new(x * gridUnit, -gridRange * gridUnit, 0), new(x * gridUnit, gridRange * gridUnit, 0));
+            Gizmos.DrawLine(new Vector3(x * gridUnit, -gridRange * gridUnit, 0), new Vector3(x * gridUnit, gridRange * gridUnit, 0));
         for (int y = -gridRange; y <= gridRange; y++)
-            Gizmos.DrawLine(new(-gridRange * gridUnit, y * gridUnit, 0), new(gridRange * gridUnit, y * gridUnit, 0));
+            Gizmos.DrawLine(new Vector3(-gridRange * gridUnit, y * gridUnit, 0), new Vector3(gridRange * gridUnit, y * gridUnit, 0));
     }
 }
