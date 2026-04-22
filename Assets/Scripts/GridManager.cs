@@ -2,19 +2,7 @@ using UnityEngine;
 
 public class GridManager : MonoBehaviour
 {
-    private static GridManager _instance;
-    public static GridManager Instance
-    {
-        get
-        {
-            if (_instance == null)
-            {
-                GameObject temp = new GameObject("GridManager_AutoCreated");
-                _instance = temp.AddComponent<GridManager>();
-            }
-            return _instance;
-        }
-    }
+    public static GridManager Instance;
 
     public float gridUnit = 0.6f;
     public int gridRange = 30;
@@ -22,9 +10,9 @@ public class GridManager : MonoBehaviour
 
     private void Awake()
     {
-        if (_instance == null)
+        if (Instance == null)
         {
-            _instance = this;
+            Instance = this;
         }
         else
         {
