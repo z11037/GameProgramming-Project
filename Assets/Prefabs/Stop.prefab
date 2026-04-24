@@ -146,8 +146,12 @@ MonoBehaviour:
   type: 4
   textType: 3
   textContent: 7
+  wallSprite: {fileID: 0}
+  rockSprite: {fileID: 0}
+  manSprite: {fileID: 0}
+  cherrySprite: {fileID: 0}
   isYou: 0
   isStop: 0
-  isPush: 0
+  isPush: 1
   isWin: 0
   moveLerpSpeed: 20

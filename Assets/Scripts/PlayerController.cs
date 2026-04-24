@@ -2,13 +2,22 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    public float moveSmooth = 18f;
     public float moveGap = 0.25f;
     private bool isMoving;
 
+    void Start()
+    {
+        Invoke(nameof(InitialRuleRefresh), 0.5f);
+    }
+
+    void InitialRuleRefresh()
+    {
+        RuleManager.Instance.RefreshAllRules();
+    }
+
     void Update()
     {
-        if (LevelManager.Instance == null || RuleManager.Instance == null || GridManager.Instance == null)
+        if (LevelManager.Instance == null || RuleManager.Instance == null)
             return;
 
         var allYouObjects = LevelManager.Instance.GetAllYouObjects();
@@ -30,13 +39,6 @@ public class PlayerController : MonoBehaviour
         {
             Debug.Log("LEVEL COMPLETE!");
             Time.timeScale = 0f;
-            foreach (var obj in LevelManager.Instance.GetAllObjects())
-            {
-                if (obj.TryGetComponent<SpriteRenderer>(out var sr))
-                {
-                    sr.color = Color.green;
-                }
-            }
             enabled = false;
             return;
         }

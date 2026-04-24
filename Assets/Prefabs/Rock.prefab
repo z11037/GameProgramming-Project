@@ -144,7 +144,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   type: 2
+  textType: 0
+  textContent: 0
+  wallSprite: {fileID: 21300000, guid: 1c8f086b3fbcb314b8c83ea36e2fc859, type: 3}
+  rockSprite: {fileID: 21300000, guid: 261d81e3dad1e2143aa26f2a0977614d, type: 3}
+  manSprite: {fileID: 21300000, guid: e4b967277a96fa44aab5704c5138beaf, type: 3}
+  cherrySprite: {fileID: 21300000, guid: 5ad286e7fd2a34e41971220836ad2b7f, type: 3}
   isYou: 0
   isStop: 0
   isPush: 0
   isWin: 0
+  moveLerpSpeed: 20

@@ -23,6 +23,11 @@ public class RuleManager : MonoBehaviour
     {
         if (_instance == null) _instance = this;
         else Destroy(gameObject);
+        Invoke(nameof(ForceRefreshTest), 1f);
+    }
+    private void ForceRefreshTest()
+    {
+        RefreshAllRules();
     }
 
     public void RegisterTextObject(GridObject textObj)
@@ -61,7 +66,11 @@ public class RuleManager : MonoBehaviour
 
         foreach (var textObj in allTextObjects)
         {
-            textPosDic[textObj.TargetGridPos] = textObj;
+            Vector2Int pos = textObj.TargetGridPos;
+            if (!textPosDic.ContainsKey(pos))
+            {
+                textPosDic[pos] = textObj;
+            }
         }
 
         foreach (var textObj in allTextObjects)
@@ -110,15 +119,16 @@ public class RuleManager : MonoBehaviour
 
         return rules;
     }
-
     private void ApplyRules(List<ValidRule> rules, List<GridObject> allObjects)
     {
         foreach (var rule in rules)
         {
-            List<GridObject> targetObjects = LevelManager.Instance.GetObjectsByNoun(rule.noun);
+            GridObject.ObjectType targetNounType = NounToObjectType(rule.noun);
+            if (targetNounType == GridObject.ObjectType.Empty) continue;
 
-            foreach (var obj in targetObjects)
+            foreach (var obj in allObjects)
             {
+                if (obj.type != targetNounType) continue;
                 if (rule.targetType == GridObject.TextType.Property)
                 {
                     switch (rule.target)
@@ -140,7 +150,13 @@ public class RuleManager : MonoBehaviour
 
                 if (rule.targetType == GridObject.TextType.Noun)
                 {
-                    obj.type = NounToObjectType(rule.target);
+                    GridObject.ObjectType newType = NounToObjectType(rule.target);
+                    if (obj.type != newType && newType != GridObject.ObjectType.Empty)
+                    {
+                        obj.type = newType;
+                        obj.UpdateVisualForType();
+                        LevelManager.Instance.UpdateObjectPosition(obj, obj.TargetGridPos);
+                    }
                 }
             }
         }
