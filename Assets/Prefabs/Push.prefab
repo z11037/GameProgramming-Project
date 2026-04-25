@@ -54,7 +54,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: 3c4954aa276027548bdead379418bbde, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -146,8 +146,12 @@ MonoBehaviour:
   type: 4
   textType: 3
   textContent: 8
+  wallSprite: {fileID: 0}
+  rockSprite: {fileID: 0}
+  manSprite: {fileID: 0}
+  cherrySprite: {fileID: 0}
   isYou: 0
   isStop: 0
-  isPush: 0
+  isPush: 1
   isWin: 0
   moveLerpSpeed: 20

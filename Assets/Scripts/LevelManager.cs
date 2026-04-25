@@ -24,6 +24,74 @@ public class LevelManager : MonoBehaviour
     private Dictionary<Vector2Int, List<GridObject>> gridDic = new();
     private List<GridObject> allObjectsList = new();
 
+    // ========== 新增：关卡重置系统 ==========
+    [Header("LevelSetting")]
+    public Transform levelRoot;
+    private List<GridObject> levelOriginalObjects = new();
+    private Dictionary<GridObject, Vector3> originalPositions = new();
+    private Dictionary<GridObject, Quaternion> originalRotations = new();
+
+    private void Start()
+    {
+        // 游戏启动时，保存关卡初始状态
+        //SaveLevelOriginalState();
+    }
+
+    // 保存关卡初始状态
+    public void SaveLevelOriginalState()
+    {
+        levelOriginalObjects.Clear();
+        originalPositions.Clear();
+        originalRotations.Clear();
+
+        // 如果没有设置关卡根节点，就用当前物体作为根节点
+        if (levelRoot == null) levelRoot = transform;
+
+        // 获取关卡里所有的GridObject
+        GridObject[] allObjects = levelRoot.GetComponentsInChildren<GridObject>();
+        foreach (var obj in allObjects)
+        {
+            levelOriginalObjects.Add(obj);
+            originalPositions[obj] = obj.transform.position;
+            originalRotations[obj] = obj.transform.rotation;
+        }
+
+        Debug.Log($"【LevelManager】关卡初始状态保存完成，共 {levelOriginalObjects.Count} 个物体");
+    }
+
+    // 重置关卡
+    public void ResetLevel()
+    {
+        Debug.Log("【LevelManager】开始重置关卡");
+        Time.timeScale = 1f;
+
+        // 恢复所有物体的初始位置和状态
+        foreach (var obj in levelOriginalObjects)
+        {
+            if (obj == null) continue;
+
+            // 恢复位置和旋转
+            obj.transform.position = originalPositions[obj];
+            obj.transform.rotation = originalRotations[obj];
+            // 重置目标格子
+            obj.ForceAlignToGrid();
+            // 重置规则属性
+            obj.ResetRuleProperties();
+            // 重新注册物体
+            RegisterObject(obj, skipForceAlign: true);
+        }
+
+        // 重新刷新规则
+        RuleManager.Instance.RefreshAllRules();
+        // 重新启用玩家控制器
+        if (PlayerController.Instance != null)
+        {
+            PlayerController.Instance.enabled = true;
+        }
+
+        Debug.Log("【LevelManager】关卡重置完成");
+    }
+
     private void Awake()
     {
         if (_instance != null && _instance != this)

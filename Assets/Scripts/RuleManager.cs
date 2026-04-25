@@ -3,31 +3,33 @@ using System.Collections.Generic;
 
 public class RuleManager : MonoBehaviour
 {
-    private static RuleManager _instance;
-    public static RuleManager Instance
+    public static RuleManager Instance { get; private set; }
+
+    // ========== 完整的ValidRule类定义 ==========
+    private class ValidRule
     {
-        get
-        {
-            if (_instance == null)
-            {
-                GameObject temp = new GameObject("RuleManager_AutoCreated");
-                _instance = temp.AddComponent<RuleManager>();
-            }
-            return _instance;
-        }
+        public GridObject.TextContent noun;
+        public GridObject.TextContent target;
+        public GridObject.TextType targetType;
     }
 
     private List<GridObject> allTextObjects = new();
 
     private void Awake()
     {
-        if (_instance == null) _instance = this;
-        else Destroy(gameObject);
-        Invoke(nameof(ForceRefreshTest), 1f);
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
     }
-    private void ForceRefreshTest()
+
+    // ========== 新增：清空文字列表的方法 ==========
+    public void ClearAllTextObjects()
     {
-        RefreshAllRules();
+        allTextObjects.Clear();
+        Debug.Log("【RuleManager】已清空所有文字方块注册");
     }
 
     public void RegisterTextObject(GridObject textObj)
@@ -39,26 +41,32 @@ public class RuleManager : MonoBehaviour
         }
     }
 
-    public void UnregisterTextObject(GridObject textObj)
-    {
-        if (allTextObjects.Contains(textObj))
-        {
-            allTextObjects.Remove(textObj);
-        }
-    }
-
     public void RefreshAllRules()
     {
+        if (allTextObjects.Count == 0)
+        {
+            Debug.LogWarning("【RuleManager】无注册的文字物体，跳过规则刷新");
+            return;
+        }
+
+        Debug.Log("【RuleManager】开始刷新规则");
         List<GridObject> allObjects = LevelManager.Instance.GetAllObjects();
+
+        // 先重置所有物体的规则属性
         foreach (var obj in allObjects)
         {
             obj.ResetRuleProperties();
         }
 
+        // 扫描有效规则
         List<ValidRule> validRules = ScanAllValidRules();
+        Debug.Log($"【RuleManager】扫描到有效规则数量：{validRules.Count}");
+
+        // 应用规则
         ApplyRules(validRules, allObjects);
     }
 
+    // ========== 完整的ScanAllValidRules方法 ==========
     private List<ValidRule> ScanAllValidRules()
     {
         List<ValidRule> rules = new List<ValidRule>();
@@ -73,6 +81,7 @@ public class RuleManager : MonoBehaviour
             }
         }
 
+        // 横向规则扫描（左→右）
         foreach (var textObj in allTextObjects)
         {
             if (textObj.textType != GridObject.TextType.Noun) continue;
@@ -91,10 +100,12 @@ public class RuleManager : MonoBehaviour
                         target = targetText.textContent,
                         targetType = targetText.textType
                     });
+                    Debug.Log($"【RuleManager】发现规则：{textObj.textContent} IS {targetText.textContent}");
                 }
             }
         }
 
+        // 纵向规则扫描（上→下）
         foreach (var textObj in allTextObjects)
         {
             if (textObj.textType != GridObject.TextType.Noun) continue;
@@ -113,55 +124,61 @@ public class RuleManager : MonoBehaviour
                         target = targetText.textContent,
                         targetType = targetText.textType
                     });
+                    Debug.Log($"【RuleManager】发现规则：{textObj.textContent} IS {targetText.textContent}");
                 }
             }
         }
 
         return rules;
     }
-    private void ApplyRules(List<ValidRule> rules, List<GridObject> allObjects)
-    {
-        foreach (var rule in rules)
-        {
-            GridObject.ObjectType targetNounType = NounToObjectType(rule.noun);
-            if (targetNounType == GridObject.ObjectType.Empty) continue;
 
-            foreach (var obj in allObjects)
+    // ========== 完整的ApplyRules方法 ==========
+    private void ApplyRules(List<ValidRule> validRules, List<GridObject> allObjects)
+    {
+        foreach (var rule in validRules)
+        {
+            List<GridObject> targetObjects = LevelManager.Instance.GetObjectsByNoun(rule.noun);
+
+            foreach (var obj in targetObjects)
             {
-                if (obj.type != targetNounType) continue;
                 if (rule.targetType == GridObject.TextType.Property)
                 {
                     switch (rule.target)
                     {
                         case GridObject.TextContent.You:
                             obj.isYou = true;
+                            Debug.Log($"【RuleManager】设置isYou：{obj.name}");
                             break;
                         case GridObject.TextContent.Stop:
                             obj.isStop = true;
+                            Debug.Log($"【RuleManager】设置isStop：{obj.name}");
                             break;
                         case GridObject.TextContent.Push:
                             obj.isPush = true;
+                            Debug.Log($"【RuleManager】设置isPush：{obj.name}");
                             break;
                         case GridObject.TextContent.Win:
                             obj.isWin = true;
+                            Debug.Log($"【RuleManager】设置isWin：{obj.name}");
                             break;
                     }
                 }
-
-                if (rule.targetType == GridObject.TextType.Noun)
+                else if (rule.targetType == GridObject.TextType.Noun)
                 {
+                    // 物体类型转化逻辑（保留你之前的原有逻辑）
                     GridObject.ObjectType newType = NounToObjectType(rule.target);
-                    if (obj.type != newType && newType != GridObject.ObjectType.Empty)
+                    if (newType != GridObject.ObjectType.Empty && obj.type != newType)
                     {
                         obj.type = newType;
-                        obj.UpdateVisualForType();
-                        LevelManager.Instance.UpdateObjectPosition(obj, obj.TargetGridPos);
+                        // 这里可以加Sprite同步逻辑，保留你之前的原有代码
+                        Debug.Log($"【RuleManager】物体类型转化：{obj.name} → {newType}");
                     }
                 }
             }
         }
     }
 
+    // ========== 辅助方法：名词转物体类型 ==========
     private GridObject.ObjectType NounToObjectType(GridObject.TextContent noun)
     {
         switch (noun)
@@ -172,12 +189,5 @@ public class RuleManager : MonoBehaviour
             case GridObject.TextContent.Cherry: return GridObject.ObjectType.Cherry;
             default: return GridObject.ObjectType.Empty;
         }
-    }
-
-    private class ValidRule
-    {
-        public GridObject.TextContent noun;
-        public GridObject.TextContent target;
-        public GridObject.TextType targetType;
     }
 }
