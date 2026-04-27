@@ -62,7 +62,6 @@ public class PlayerController : MonoBehaviour
         {
             Debug.Log("LEVEL COMPLETE!");
             Time.timeScale = 0f;
-            // 通关视觉效果
             foreach (var obj in LevelManager.Instance.GetAllObjects())
             {
                 if (obj.TryGetComponent<SpriteRenderer>(out var sr))
@@ -70,7 +69,6 @@ public class PlayerController : MonoBehaviour
                     sr.color = Color.green;
                 }
             }
-            // 延迟0.5秒加载下一关
             Invoke(nameof(LoadNextLevelDelayed), 0.5f);
             enabled = false;
             return;
@@ -88,18 +86,15 @@ public class PlayerController : MonoBehaviour
                 dir == Vector2Int.down ? KeyCode.S :
                 dir == Vector2Int.left ? KeyCode.A : KeyCode.D))
             {
-                // 首次按下，立即移动
                 longPressTimer = 0;
                 lastMoveDir = dir;
                 TryMoveAllPlayers(dir);
             }
             else
             {
-                // 长按计时
                 longPressTimer += Time.deltaTime;
                 if (longPressTimer >= longPressThreshold && dir == lastMoveDir && !isMoving)
                 {
-                    // 长按连续移动
                     TryMoveAllPlayers(dir);
                     longPressTimer = 0;
                 }
@@ -107,7 +102,6 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
-            // 松开按键，重置计时
             longPressTimer = 0;
             lastMoveDir = Vector2Int.zero;
         }
@@ -120,11 +114,9 @@ public class PlayerController : MonoBehaviour
         var allYouObjects = LevelManager.Instance.GetAllYouObjects();
         bool moveSuccess = true;
 
-        // 先预检查所有玩家物体是否都能移动
         foreach (var youObj in allYouObjects)
         {
             Vector2Int targetPos = youObj.TargetGridPos + dir;
-            // 地图边界阻挡：超出范围直接无法移动
             if (Mathf.Abs(targetPos.x) > 20 || Mathf.Abs(targetPos.y) > 20)
             {
                 moveSuccess = false;
@@ -133,8 +125,6 @@ public class PlayerController : MonoBehaviour
         }
 
         if (!moveSuccess) return;
-
-        // 执行移动
         foreach (var youObj in allYouObjects)
         {
             if (!LevelManager.Instance.TryMove(youObj, dir))
@@ -143,11 +133,8 @@ public class PlayerController : MonoBehaviour
                 break;
             }
         }
-
-        // 移动成功，刷新规则
         if (moveSuccess)
         {
-            Debug.Log($"【PlayerController】移动成功，共移动 {allYouObjects.Count} 个玩家物体");
             RuleManager.Instance.RefreshAllRules();
             isMoving = true;
             Invoke(nameof(MoveEnd), moveGap);
