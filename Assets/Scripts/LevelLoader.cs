@@ -69,6 +69,8 @@ public class LevelLoader : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Alpha1)) LoadLevel(0);
         if (Input.GetKeyDown(KeyCode.Alpha2)) LoadLevel(1);
+        if (Input.GetKeyDown(KeyCode.Alpha3)) LoadLevel(2);
+        if (Input.GetKeyDown(KeyCode.Alpha4)) LoadLevel(3);
         if (Input.GetKeyDown(KeyCode.R)) ResetCurrentLevel();
     }
 

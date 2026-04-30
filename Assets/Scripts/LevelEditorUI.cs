@@ -21,7 +21,6 @@ public class LevelEditorUI : MonoBehaviour
     {
         if (GameManager.Instance == null || LevelEditorManager.Instance == null)
         {
-            Debug.LogError("GameManager/LevelEditorManager 单例未找到！");
             return;
         }
 
@@ -75,7 +74,6 @@ public class LevelEditorUI : MonoBehaviour
         btn.onClick.AddListener(() =>
         {
             LevelEditorManager.Instance.SelectPrefab(prefab);
-            Debug.Log($"已选择物体：{prefab.name}");
         });
     }
 }
