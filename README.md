@@ -1,4 +1,4 @@
-# GameProgramming-Project
+# GameProgramming-Project(Jiacheng Zheng)
 A simplified 2D grid-based word puzzle game, inspired by the classic game "Baba Is You". This project is a vertical slice for a game development course, focusing on core mechanics with minimal complexity.
 
 ## Game Overview
