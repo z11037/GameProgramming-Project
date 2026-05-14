@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public enum GameState
 {
@@ -8,8 +8,10 @@ public enum GameState
 
 public class GameManager : MonoBehaviour
 {
+    public GameObject editorUIContainer;
+    public GameObject editModeButton;
+    public GameObject playModeButton;
     public static GameManager Instance { get; private set; }
-
     public GameState CurrentState { get; private set; }
 
     private void Awake()
@@ -19,39 +21,55 @@ public class GameManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
+
         Instance = this;
-        DontDestroyOnLoad(gameObject);
     }
 
     private void Start()
     {
-        SwitchToPlayingMode();
+        SwitchToEditingMode();
     }
 
     public void SwitchToEditingMode()
     {
         CurrentState = GameState.Editing;
+
         if (PlayerController.Instance != null)
-        {
             PlayerController.Instance.enabled = false;
-        }
-        RuleManager.Instance.enabled = false;
-        LevelLoader.Instance.ClearCurrentLevel();
-        Debug.Log("Switched to Editing Mode");
+
+        if (RuleManager.Instance != null)
+            RuleManager.Instance.enabled = false;
+
+        if (LevelLoader.Instance != null)
+            LevelLoader.Instance.ClearCurrentLevel();
+
+        if (editorUIContainer != null)
+            editorUIContainer.SetActive(true);
+        if (editModeButton != null)
+            editModeButton.SetActive(true);
+        if (playModeButton != null)
+            playModeButton.SetActive(true);
     }
 
     public void SwitchToPlayingMode()
     {
         CurrentState = GameState.Playing;
-        RuleManager.Instance.enabled = true;
-        RuleManager.Instance.RefreshAllRules();
-        if (PlayerController.Instance != null)
+        if (RuleManager.Instance != null)
         {
-            PlayerController.Instance.enabled = true;
+            RuleManager.Instance.enabled = true;
+            RuleManager.Instance.RefreshAllRules();
         }
-        Debug.Log("Switched to Playing Mode");
-    }
 
+        if (PlayerController.Instance != null)
+            PlayerController.Instance.enabled = true;
+
+        if (editorUIContainer != null)
+            editorUIContainer.SetActive(false);
+        if (editModeButton != null)
+            editModeButton.SetActive(true);
+        if (playModeButton != null)
+            playModeButton.SetActive(true);
+    }
     private void OnDestroy()
     {
         if (Instance == this)

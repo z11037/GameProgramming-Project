@@ -9,9 +9,24 @@ public class MainMenu : MonoBehaviour
 
     public void OnStartGame()
     {
-        mainMenuCanvas.SetActive(false);
-        gameCanvas.SetActive(true);
-        GameManager.Instance.SwitchToEditingMode();
+        if (mainMenuCanvas != null)
+            mainMenuCanvas.SetActive(false);
+
+        if (gameCanvas != null)
+            gameCanvas.SetActive(true);
+
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.SwitchToEditingMode();
+            GameObject editButton = GameObject.Find("EditModeButton");
+            if (editButton != null)
+                editButton.SetActive(true);
+
+            GameObject playButton = GameObject.Find("PlayModeButton");
+            if (playButton != null)
+                playButton.SetActive(true);
+        }
+
     }
 
     public void OnQuitGame()
