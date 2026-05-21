@@ -85,6 +85,7 @@ public class LevelEditorManager : MonoBehaviour
 
     private void PlaceObject(Vector2Int gridPos)
     {
+        Debug.Log($"Call from {gameObject.name}, frame {Time.frameCount}");
         GridObject existingObj = LevelManager.Instance.GetSingleObjectAtGrid(gridPos);
         if (existingObj != null)
         {
@@ -243,7 +244,24 @@ public class LevelEditorManager : MonoBehaviour
 
     public void TestEditedLevel()
     {
-        LevelLoader.Instance.LoadTestLevel(editingLevelData);
+        if (LevelLoader.Instance != null && LevelLoader.Instance.levelRoot != null)
+        {
+            // 先注销所有物体
+            foreach (Transform child in LevelLoader.Instance.levelRoot)
+            {
+                GridObject gridObj = child.GetComponent<GridObject>();
+                if (gridObj != null)
+                {
+                    LevelManager.Instance.UnregisterObject(gridObj);
+                }
+            }
+        }
+            // 再销毁
+            foreach (Transform child in LevelLoader.Instance.levelRoot)
+            {
+                Destroy(child.gameObject);
+            }
+            LevelLoader.Instance.LoadTestLevel(editingLevelData);
         GameManager.Instance.SwitchToPlayingMode();
     }
 

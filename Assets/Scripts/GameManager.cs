@@ -73,10 +73,13 @@ public class GameManager : MonoBehaviour
             editModeButton.SetActive(true);
         if (playModeButton != null)
             playModeButton.SetActive(true);
-        selector.SetActive(true);
-            
+      
     }
     
+    public void ShowSelector()
+    {
+        selector.SetActive(true);
+    }
     public void BackToMainMenu()
     {
         mainMenu.mainMenuCanvas.SetActive(true);
