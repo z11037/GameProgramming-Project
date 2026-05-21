@@ -1,7 +1,16 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections.Generic;
 using System.IO;
 
+[System.Serializable]
+public class EditorOperation
+{
+    public enum OperationType { Place, Delete }
+    public OperationType type;
+    public GameObject prefab;
+    public Vector2Int gridPos;
+    public GridObject spawnedObject;
+}
 public class LevelEditorManager : MonoBehaviour
 {
     public static LevelEditorManager Instance { get; private set; }
@@ -12,7 +21,7 @@ public class LevelEditorManager : MonoBehaviour
     private GameObject selectedPrefab;
     private LevelData editingLevelData = new LevelData();
     private string customLevelSavePath;
-
+    private Stack<EditorOperation> operationStack = new Stack<EditorOperation>();
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -62,6 +71,10 @@ public class LevelEditorManager : MonoBehaviour
         {
             DeleteObject(gridPos);
         }
+        if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.Z))
+        {
+            UndoLastOperation();
+        }
     }
 
     public void SelectPrefab(GameObject prefab)
@@ -75,6 +88,14 @@ public class LevelEditorManager : MonoBehaviour
         GridObject existingObj = LevelManager.Instance.GetSingleObjectAtGrid(gridPos);
         if (existingObj != null)
         {
+            operationStack.Push(new EditorOperation
+            {
+                type = EditorOperation.OperationType.Delete,
+                prefab = existingObj.gameObject,
+                gridPos = gridPos,
+                spawnedObject = existingObj
+            });
+
             LevelManager.Instance.UnregisterObject(existingObj);
             Destroy(existingObj.gameObject);
         }
@@ -89,18 +110,71 @@ public class LevelEditorManager : MonoBehaviour
             gridObj.SetTargetGrid(gridPos);
             LevelManager.Instance.RegisterObject(gridObj);
             UpdateLevelData(gridObj, gridPos, true);
+
+            operationStack.Push(new EditorOperation
+            {
+                type = EditorOperation.OperationType.Place,
+                prefab = selectedPrefab,
+                gridPos = gridPos,
+                spawnedObject = gridObj
+            });
         }
     }
-
     private void DeleteObject(Vector2Int gridPos)
     {
         GridObject objToDelete = LevelManager.Instance.GetSingleObjectAtGrid(gridPos);
         if (objToDelete != null)
         {
+            operationStack.Push(new EditorOperation
+            {
+                type = EditorOperation.OperationType.Delete,
+                prefab = objToDelete.gameObject,
+                gridPos = gridPos,
+                spawnedObject = objToDelete
+            });
+
             UpdateLevelData(objToDelete, gridPos, false);
             LevelManager.Instance.UnregisterObject(objToDelete);
             Destroy(objToDelete.gameObject);
         }
+    }
+
+    public void UndoLastOperation()
+    {
+        if (operationStack.Count == 0)
+        {
+            return;
+        }
+
+        EditorOperation lastOp = operationStack.Pop();
+        switch (lastOp.type)
+        {
+            case EditorOperation.OperationType.Place:
+                if (lastOp.spawnedObject != null)
+                {
+                    UpdateLevelData(lastOp.spawnedObject, lastOp.gridPos, false);
+                    LevelManager.Instance.UnregisterObject(lastOp.spawnedObject);
+                    Destroy(lastOp.spawnedObject.gameObject);
+                }
+                break;
+            case EditorOperation.OperationType.Delete:
+                if (lastOp.prefab != null)
+                {
+                    Vector3 spawnPos = GridManager.Instance.GridToWorld(lastOp.gridPos);
+                    spawnPos.z = GetZOffsetForPrefab(lastOp.prefab);
+                    GameObject newObj = Instantiate(lastOp.prefab, spawnPos, Quaternion.identity, LevelLoader.Instance.levelRoot);
+                    GridObject gridObj = newObj.GetComponent<GridObject>();
+
+                    if (gridObj != null)
+                    {
+                        gridObj.SetTargetGrid(lastOp.gridPos);
+                        LevelManager.Instance.RegisterObject(gridObj);
+                        UpdateLevelData(gridObj, lastOp.gridPos, true);
+                    }
+                }
+                break;
+        }
+
     }
 
     private void UpdateLevelData(GridObject gridObj, Vector2Int gridPos, bool isAdd)
@@ -181,5 +255,30 @@ public class LevelEditorManager : MonoBehaviour
         if (gridObj.type == GridObject.ObjectType.Text) return -0.5f;
         if (gridObj.type == GridObject.ObjectType.Man) return -1f;
         return 0;
+    }
+
+    public void ClearCurrentLevel()
+    {
+        if (LevelLoader.Instance != null && LevelLoader.Instance.levelRoot != null)
+        {
+            foreach (Transform child in LevelLoader.Instance.levelRoot)
+            {
+                Destroy(child.gameObject);
+            }
+        }
+
+        if (editingLevelData != null)
+        {
+            editingLevelData.objects.Clear();
+            editingLevelData.textObjects.Clear();
+        }
+
+        selectedPrefab = null;
+
+        operationStack.Clear();
+
+        if (RuleManager.Instance != null)
+            RuleManager.Instance.ClearAllTextObjects();
+
     }
 }

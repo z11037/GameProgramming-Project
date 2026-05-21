@@ -11,6 +11,9 @@ public class GameManager : MonoBehaviour
     public GameObject editorUIContainer;
     public GameObject editModeButton;
     public GameObject playModeButton;
+    public GameObject backButton;
+    public MainMenu mainMenu;
+    public GameObject selector;
     public static GameManager Instance { get; private set; }
     public GameState CurrentState { get; private set; }
 
@@ -49,6 +52,7 @@ public class GameManager : MonoBehaviour
             editModeButton.SetActive(true);
         if (playModeButton != null)
             playModeButton.SetActive(true);
+        selector.SetActive(false);
     }
 
     public void SwitchToPlayingMode()
@@ -69,6 +73,14 @@ public class GameManager : MonoBehaviour
             editModeButton.SetActive(true);
         if (playModeButton != null)
             playModeButton.SetActive(true);
+        selector.SetActive(true);
+            
+    }
+    
+    public void BackToMainMenu()
+    {
+        mainMenu.mainMenuCanvas.SetActive(true);
+        mainMenu.gameCanvas.SetActive(false);
     }
     private void OnDestroy()
     {
