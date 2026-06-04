@@ -1,0 +1,20 @@
+[33m7eb456b[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Implement Clear button to reset entire level with one click Add full Undo system with Ctrl+Z shortcut Add global Back to Menu button Implement dynamic level selector UI with auto-generated buttons
+[33m4b15bf1[m Implement Clear button to reset entire level with one click Add full Undo system with Ctrl+Z shortcut Add global Back to Menu button Implement dynamic level selector UI with auto-generated buttons
+[33me40c1b8[m Merge branch 'main' of https://github.com/z11037/GameProgramming-Project
+[33m0860676[m implement editor UI auto-hide functionality in play mode
+[33m4dab9f4[m Modify project title in README
+[33mde53cfe[m Implement main menu system and add 2 new puzzle levels
+[33m9b3d91a[m complete basic UI and level editor
+[33m2b55546[m feat: complete rule-driven puzzle game core framework and lightweight content pipeline - Implement RuleManager with horizontal/vertical rule scanning, dynamic property assignment, and object type transformation - Add JSON-based level system with LevelData structure, LevelLoader prefab spawning, level switching, one-click reset, and auto-next-level on win - Create multi-object overlap rendering solution with GridObjectOverlapTransparency dynamic alpha script and custom 2DOverlapBlend shader - Build Unity Editor utility tools including PrefabTransparencyTool and PrefabMaterialTool for efficient prefab setup
+[33mb41d550[m Implement complete core gameplay system: multi-object coexistence grid, full rule engine, object type conversion, multi-player control, smart win detection, and force grid alignment
+[33mf4c20d8[m Fix rule not applying: restore missing ApplyRules call in RefreshAllRules
+[33m0f95472[m Remove unnecessary testing codes
+[33ma3026da[m Fix duplicate GridManager creation bug: optimize singleton pattern to prevent auto-generated duplicate manager instances
+[33mf891120[m Add RuleManager for text-based rule parsing, extend GridObject for text blocks, support dynamic property modification, multi-object control, and win condition check
+[33m7e3c5a5[m Complete core grid movement
+[33m680cbf1[m Add full grid coordinate system; fix player movement distance and direction bugs, support continuous movement when holding keys
+[33m4349ee2[m Add player grid movement runtime logic
+[33m140bbfe[m Add Unity editor tool & finish batch game block prefabs
+[33m15ef547[m Add complete hand-drawn pixel assets
+[33mcfb9970[m Expand README with game details and instructions
+[33m4c1c9dc[m Initial commit

@@ -21,14 +21,17 @@ public class LevelManager : MonoBehaviour
         }
     }
 
-    private Dictionary<Vector2Int, List<GridObject>> gridDic = new();
-    private List<GridObject> allObjectsList = new();
+    [Header("Grid Settings")]
+    public int maxGridBound = 20;
 
-    [Header("LevelSetting")]
+    [Header("Level Setting")]
     public Transform levelRoot;
     private List<GridObject> levelOriginalObjects = new();
     private Dictionary<GridObject, Vector3> originalPositions = new();
     private Dictionary<GridObject, Quaternion> originalRotations = new();
+
+    private Dictionary<Vector2Int, List<GridObject>> gridDic = new();
+    private List<GridObject> allObjectsList = new();
 
     public void SaveLevelOriginalState()
     {
@@ -50,6 +53,7 @@ public class LevelManager : MonoBehaviour
     public void ResetLevel()
     {
         Time.timeScale = 1f;
+
         foreach (var obj in levelOriginalObjects)
         {
             if (obj == null) continue;
@@ -57,15 +61,20 @@ public class LevelManager : MonoBehaviour
             obj.transform.rotation = originalRotations[obj];
             obj.ForceAlignToGrid();
             obj.ResetRuleProperties();
+
+            if (obj.TryGetComponent<SpriteRenderer>(out var sr))
+                sr.color = Color.white;
+
             RegisterObject(obj, skipForceAlign: true);
         }
 
         RuleManager.Instance.RefreshAllRules();
         if (PlayerController.Instance != null)
         {
+            PlayerController.Instance.ResetMoveLock();
+            PlayerController.Instance.ResetWinState();
             PlayerController.Instance.enabled = true;
         }
-
     }
 
     private void Awake()
@@ -83,49 +92,38 @@ public class LevelManager : MonoBehaviour
         if (obj == null) return;
 
         if (!skipForceAlign)
-        {
             obj.ForceAlignToGrid();
-        }
-        Vector2Int gridPos = obj.TargetGridPos;
 
+        Vector2Int gridPos = obj.TargetGridPos;
         UnregisterObject(obj);
 
         if (!gridDic.ContainsKey(gridPos))
-        {
             gridDic[gridPos] = new List<GridObject>();
-        }
+
         if (!gridDic[gridPos].Contains(obj))
-        {
             gridDic[gridPos].Add(obj);
-        }
+
         if (!allObjectsList.Contains(obj))
-        {
             allObjectsList.Add(obj);
-        }
 
         if (obj.type == GridObject.ObjectType.Text)
-        {
             RuleManager.Instance.RegisterTextObject(obj);
-        }
-
     }
 
     public void UnregisterObject(GridObject obj)
     {
         if (obj == null) return;
-        foreach (var item in gridDic)
+
+        foreach (var kvp in gridDic)
         {
-            if (item.Value.Contains(obj))
+            if (kvp.Value.Contains(obj))
             {
-                item.Value.Remove(obj);
-                if (item.Value.Count == 0)
-                {
-                    gridDic.Remove(item.Key);
-                }
+                kvp.Value.Remove(obj);
+                if (kvp.Value.Count == 0)
+                    gridDic.Remove(kvp.Key);
                 break;
             }
         }
-
         allObjectsList.Remove(obj);
     }
 
@@ -137,23 +135,63 @@ public class LevelManager : MonoBehaviour
         RegisterObject(obj, skipForceAlign: true);
     }
 
-    public List<GridObject> GetAllObjects()
+    public bool MoveObject(GridObject obj, Vector2Int dir, HashSet<GridObject> movedThisTurn)
     {
-        return new List<GridObject>(allObjectsList);
+        if (obj == null || movedThisTurn.Contains(obj))
+            return false;
+
+        Vector2Int targetPos = obj.TargetGridPos + dir;
+        if (Mathf.Abs(targetPos.x) > maxGridBound || Mathf.Abs(targetPos.y) > maxGridBound)
+            return false;
+
+        var objectsAtTarget = GetObjectsAtGrid(targetPos);
+        foreach (var targetObj in objectsAtTarget)
+        {
+            if (targetObj == obj) continue;
+            if (movedThisTurn.Contains(targetObj)) continue;
+
+            if (targetObj.isStop && targetObj.isPush)
+            {
+                if (!MoveObject(targetObj, dir, movedThisTurn))
+                    return false;
+            }
+            else if (targetObj.isStop)
+            {
+                return false;
+            }
+            else if (targetObj.isPush)
+            {
+                if (!MoveObject(targetObj, dir, movedThisTurn))
+                    return false;
+            }
+        }
+
+        movedThisTurn.Add(obj);
+        UpdateObjectPosition(obj, targetPos);
+        return true;
+    }
+
+    public List<GridObject> GetAllObjects() => new List<GridObject>(allObjectsList);
+
+    public List<GridObject> GetObjectsAtGrid(Vector2Int gridPos)
+    {
+        return gridDic.TryGetValue(gridPos, out var list) ? new List<GridObject>(list) : new List<GridObject>();
+    }
+
+    public GridObject GetSingleObjectAtGrid(Vector2Int gridPos)
+    {
+        if (gridDic.TryGetValue(gridPos, out var list) && list.Count > 0)
+            return list[0];
+        return null;
     }
 
     public List<GridObject> GetObjectsByNoun(GridObject.TextContent noun)
     {
-        List<GridObject> result = new List<GridObject>();
         GridObject.ObjectType targetType = NounToObjectType(noun);
-
+        List<GridObject> result = new List<GridObject>();
         foreach (var obj in allObjectsList)
-        {
             if (obj.type == targetType)
-            {
                 result.Add(obj);
-            }
-        }
         return result;
     }
 
@@ -161,116 +199,58 @@ public class LevelManager : MonoBehaviour
     {
         List<GridObject> result = new List<GridObject>();
         foreach (var obj in allObjectsList)
-        {
             if (obj.isYou)
-            {
                 result.Add(obj);
-            }
-        }
         return result;
     }
 
     public bool CheckWinCondition()
     {
-        List<GridObject> allYouObjects = GetAllYouObjects();
+        var allYou = GetAllYouObjects();
+        if (allYou.Count == 0) return false;
 
-        if (allYouObjects.Count == 0)
+        foreach (var you in allYou)
         {
-            return false;
-        }
-
-        foreach (var youObj in allYouObjects)
-        {
-            if (youObj.isWin)
-            {
+            if (you.isWin)
                 return true;
-            }
 
-            if (gridDic.TryGetValue(youObj.TargetGridPos, out List<GridObject> sameGridObjects))
+            if (gridDic.TryGetValue(you.TargetGridPos, out var cellObjects))
             {
-                foreach (var obj in sameGridObjects)
+                foreach (var obj in cellObjects)
                 {
-                    if (obj.isWin && obj != youObj)
-                    {
+                    if (obj.isWin)
                         return true;
-                    }
                 }
             }
         }
-
         return false;
+    }
+
+    public List<GridObject> SortObjectsByDirection(List<GridObject> objects, Vector2Int dir)
+    {
+        List<GridObject> sorted = new List<GridObject>(objects);
+
+        if (dir == Vector2Int.right)
+            sorted.Sort((a, b) => b.TargetGridPos.x.CompareTo(a.TargetGridPos.x));
+        else if (dir == Vector2Int.left)
+            sorted.Sort((a, b) => a.TargetGridPos.x.CompareTo(b.TargetGridPos.x));
+        else if (dir == Vector2Int.up)
+            sorted.Sort((a, b) => b.TargetGridPos.y.CompareTo(a.TargetGridPos.y));
+        else if (dir == Vector2Int.down)
+            sorted.Sort((a, b) => a.TargetGridPos.y.CompareTo(b.TargetGridPos.y));
+
+        return sorted;
     }
 
     private GridObject.ObjectType NounToObjectType(GridObject.TextContent noun)
     {
-        switch (noun)
+        return noun switch
         {
-            case GridObject.TextContent.Man: return GridObject.ObjectType.Man;
-            case GridObject.TextContent.Wall: return GridObject.ObjectType.Wall;
-            case GridObject.TextContent.Rock: return GridObject.ObjectType.Rock;
-            case GridObject.TextContent.Cherry: return GridObject.ObjectType.Cherry;
-            default: return GridObject.ObjectType.Empty;
-        }
-    }
-
-    public bool TryMove(GridObject obj, Vector2Int dir)
-    {
-        if (obj == null || dir == Vector2Int.zero) return false;
-
-        Vector2Int currentPos = obj.TargetGridPos;
-        Vector2Int targetPos = currentPos + dir;
-
-        if (gridDic.TryGetValue(targetPos, out List<GridObject> targetObjects))
-        {
-            bool hasStop = false;
-            List<GridObject> pushObjects = new List<GridObject>();
-
-            foreach (var targetObj in targetObjects)
-            {
-                if (targetObj.isStop)
-                {
-                    hasStop = true;
-                    break;
-                }
-                if (targetObj.isPush)
-                {
-                    pushObjects.Add(targetObj);
-                }
-            }
-
-            if (hasStop) return false;
-
-            foreach (var pushObj in pushObjects)
-            {
-                if (!TryMove(pushObj, dir))
-                {
-                    return false;
-                }
-            }
-        }
-
-        UpdateObjectPosition(obj, targetPos);
-        return true;
-    }
-
-    public List<GridObject> GetObjectsAtGrid(Vector2Int gridPos)
-    {
-        if (gridDic.TryGetValue(gridPos, out List<GridObject> objects))
-        {
-            return new List<GridObject>(objects);
-        }
-        return new List<GridObject>();
-    }
-
-    public GridObject GetSingleObjectAtGrid(Vector2Int gridPos)
-    {
-        if (gridDic.TryGetValue(gridPos, out List<GridObject> objects))
-        {
-            if (objects.Count > 0)
-            {
-                return objects[0];
-            }
-        }
-        return null;
+            GridObject.TextContent.Man => GridObject.ObjectType.Man,
+            GridObject.TextContent.Wall => GridObject.ObjectType.Wall,
+            GridObject.TextContent.Rock => GridObject.ObjectType.Rock,
+            GridObject.TextContent.Cherry => GridObject.ObjectType.Cherry,
+            _ => GridObject.ObjectType.Empty,
+        };
     }
 }

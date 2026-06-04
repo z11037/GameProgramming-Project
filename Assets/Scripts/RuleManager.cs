@@ -4,6 +4,7 @@ using System.Collections.Generic;
 public class RuleManager : MonoBehaviour
 {
     public static RuleManager Instance { get; private set; }
+
     private class ValidRule
     {
         public GridObject.TextContent noun;
@@ -32,116 +33,122 @@ public class RuleManager : MonoBehaviour
     {
         if (textObj == null || textObj.type != GridObject.ObjectType.Text) return;
         if (!allTextObjects.Contains(textObj))
-        {
             allTextObjects.Add(textObj);
-        }
     }
 
     public void RefreshAllRules()
     {
-        if (allTextObjects.Count == 0)
-        {
-            return;
-        }
+        if (allTextObjects.Count == 0) return;
+
         List<GridObject> allObjects = LevelManager.Instance.GetAllObjects();
         foreach (var obj in allObjects)
-        {
             obj.ResetRuleProperties();
-        }
+
         List<ValidRule> validRules = ScanAllValidRules();
         ApplyRules(validRules, allObjects);
     }
+
     private List<ValidRule> ScanAllValidRules()
     {
         List<ValidRule> rules = new List<ValidRule>();
-        Dictionary<Vector2Int, GridObject> textPosDic = new();
+        Dictionary<Vector2Int, List<GridObject>> textPosDic = new();
 
         foreach (var textObj in allTextObjects)
         {
             Vector2Int pos = textObj.TargetGridPos;
             if (!textPosDic.ContainsKey(pos))
-            {
-                textPosDic[pos] = textObj;
-            }
+                textPosDic[pos] = new List<GridObject>();
+            textPosDic[pos].Add(textObj);
         }
+
+        // 横向规则
         foreach (var textObj in allTextObjects)
         {
             if (textObj.textType != GridObject.TextType.Noun) continue;
-
             Vector2Int currentPos = textObj.TargetGridPos;
             Vector2Int isPos = currentPos + Vector2Int.right;
             Vector2Int targetPos = isPos + Vector2Int.right;
 
-            if (textPosDic.TryGetValue(isPos, out GridObject isText) && textPosDic.TryGetValue(targetPos, out GridObject targetText))
+            if (textPosDic.TryGetValue(isPos, out var isList) && textPosDic.TryGetValue(targetPos, out var targetList))
             {
-                if (isText.textContent == GridObject.TextContent.Is)
+                foreach (var isText in isList)
                 {
-                    rules.Add(new ValidRule()
+                    if (isText.textContent != GridObject.TextContent.Is) continue;
+                    foreach (var targetText in targetList)
                     {
-                        noun = textObj.textContent,
-                        target = targetText.textContent,
-                        targetType = targetText.textType
-                    });
+                        rules.Add(new ValidRule
+                        {
+                            noun = textObj.textContent,
+                            target = targetText.textContent,
+                            targetType = targetText.textType
+                        });
+                    }
                 }
             }
         }
+
+        // 竖向规则
         foreach (var textObj in allTextObjects)
         {
             if (textObj.textType != GridObject.TextType.Noun) continue;
-
             Vector2Int currentPos = textObj.TargetGridPos;
             Vector2Int isPos = currentPos + Vector2Int.down;
             Vector2Int targetPos = isPos + Vector2Int.down;
 
-            if (textPosDic.TryGetValue(isPos, out GridObject isText) && textPosDic.TryGetValue(targetPos, out GridObject targetText))
+            if (textPosDic.TryGetValue(isPos, out var isList) && textPosDic.TryGetValue(targetPos, out var targetList))
             {
-                if (isText.textContent == GridObject.TextContent.Is)
+                foreach (var isText in isList)
                 {
-                    rules.Add(new ValidRule()
+                    if (isText.textContent != GridObject.TextContent.Is) continue;
+                    foreach (var targetText in targetList)
                     {
-                        noun = textObj.textContent,
-                        target = targetText.textContent,
-                        targetType = targetText.textType
-                    });
+                        rules.Add(new ValidRule
+                        {
+                            noun = textObj.textContent,
+                            target = targetText.textContent,
+                            targetType = targetText.textType
+                        });
+                    }
                 }
             }
         }
 
         return rules;
     }
+
     private void ApplyRules(List<ValidRule> validRules, List<GridObject> allObjects)
     {
+        // 第一遍：名词转换
         foreach (var rule in validRules)
         {
-            List<GridObject> targetObjects = LevelManager.Instance.GetObjectsByNoun(rule.noun);
+            if (rule.targetType != GridObject.TextType.Noun) continue;
 
+            List<GridObject> targetObjects = LevelManager.Instance.GetObjectsByNoun(rule.noun);
+            GridObject.ObjectType newType = NounToObjectType(rule.target);
             foreach (var obj in targetObjects)
             {
-                if (rule.targetType == GridObject.TextType.Property)
+                if (newType != GridObject.ObjectType.Empty && obj.type != newType)
                 {
-                    switch (rule.target)
-                    {
-                        case GridObject.TextContent.You:
-                            obj.isYou = true;
-                            break;
-                        case GridObject.TextContent.Stop:
-                            obj.isStop = true;
-                            break;
-                        case GridObject.TextContent.Push:
-                            obj.isPush = true;
-                            break;
-                        case GridObject.TextContent.Win:
-                            obj.isWin = true;
-                            break;
-                    }
+                    obj.type = newType;
+                    obj.RefreshSpriteOnly();
                 }
-                else if (rule.targetType == GridObject.TextType.Noun)
+            }
+        }
+
+        // 第二遍：属性赋予
+        foreach (var rule in validRules)
+        {
+            if (rule.targetType != GridObject.TextType.Property) continue;
+
+            List<GridObject> targetObjects = LevelManager.Instance.GetObjectsByNoun(rule.noun);
+            foreach (var obj in targetObjects)
+            {
+                switch (rule.target)
                 {
-                    GridObject.ObjectType newType = NounToObjectType(rule.target);
-                    if (newType != GridObject.ObjectType.Empty && obj.type != newType)
-                    {
-                        obj.type = newType;
-                    }
+                    case GridObject.TextContent.You: obj.isYou = true; break;
+                    case GridObject.TextContent.Stop: obj.isStop = true; break;
+                    case GridObject.TextContent.Push: obj.isPush = true; break;
+                    case GridObject.TextContent.Win: obj.isWin = true; break;
                 }
             }
         }
@@ -149,13 +156,13 @@ public class RuleManager : MonoBehaviour
 
     private GridObject.ObjectType NounToObjectType(GridObject.TextContent noun)
     {
-        switch (noun)
+        return noun switch
         {
-            case GridObject.TextContent.Man: return GridObject.ObjectType.Man;
-            case GridObject.TextContent.Wall: return GridObject.ObjectType.Wall;
-            case GridObject.TextContent.Rock: return GridObject.ObjectType.Rock;
-            case GridObject.TextContent.Cherry: return GridObject.ObjectType.Cherry;
-            default: return GridObject.ObjectType.Empty;
-        }
+            GridObject.TextContent.Man => GridObject.ObjectType.Man,
+            GridObject.TextContent.Wall => GridObject.ObjectType.Wall,
+            GridObject.TextContent.Rock => GridObject.ObjectType.Rock,
+            GridObject.TextContent.Cherry => GridObject.ObjectType.Cherry,
+            _ => GridObject.ObjectType.Empty,
+        };
     }
 }
