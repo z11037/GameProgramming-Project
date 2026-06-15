@@ -19,8 +19,8 @@ This is a minimalist word rule puzzle game where players manipulate word blocks 
 - Push: Defines objects that can be pushed by the player
 
 ## Gameplay
-1. Use keyboard wasd keys to move and push word blocks.
-2. Form valid sentences (e.g., "Baba Is You", "Flag Is Win", "Wall Is Stop") to change the game rules.
+1. Use wasd keys to move and push word blocks.
+2. Form valid sentences (e.g. "Wall Is Stop") to change the game rules.
 3. Complete the level by touching the object marked as "Win".
 
 ## Project Scope
