@@ -2,7 +2,7 @@
 A simplified 2D grid-based word puzzle game, inspired by the classic game "Baba Is You". This project is a vertical slice for a game development course, focusing on core mechanics with minimal complexity.
 
 ## Game Overview
-This is a minimalist word rule puzzle game where players manipulate word blocks to form sentences, which change the game's collision, movement, and victory/defeat rules. The game features a single built-in level and a simple custom level editor for extended play.
+This is a minimalist word rule puzzle game where players manipulate word blocks to form sentences, which change the game's collision, movement, and victory/defeat rules. The game features built-in levels and a simple custom level editor for extended play.
 
 ## Core Rules & Vocabulary
 ### Nouns (Game Objects)
@@ -22,10 +22,11 @@ This is a minimalist word rule puzzle game where players manipulate word blocks 
 1. Use wasd keys to move and push word blocks.
 2. Form valid sentences (e.g. "Wall Is Stop") to change the game rules.
 3. Complete the level by touching the object marked as "Win".
-
+4. Press 'R' to Replay the level(Only in the play mode)
+   
 ## Project Scope
 - 4 built-in test level (8x8 grid)
-- Simple level editor (supports placing/deleting blocks, saving/loading custom levels)
+- Simple level editor (left-click to place/right-click to delete blocks, saving/loading custom levels)
 - Developed with Unity 2D Core (no complex physics or animations)
 
 ## Development Plan
