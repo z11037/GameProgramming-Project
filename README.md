@@ -6,9 +6,10 @@ This is a minimalist word rule puzzle game where players manipulate word blocks 
 
 ## Core Rules & Vocabulary
 ### Nouns (Game Objects)
-- Baba: The main character/player avatar
-- Wall: Obstacle object
-- Flag: Goal object
+- Man
+- Wall
+- Rock
+- Cherry
 
 ### Connectors & Attributes
 - Is: Connector word to form rules (format: "XX Is XX")
@@ -16,15 +17,14 @@ This is a minimalist word rule puzzle game where players manipulate word blocks 
 - Win: Defines the object that triggers victory when touched
 - Stop: Defines objects that block movement (impassable)
 - Push: Defines objects that can be pushed by the player
-- Defeat: Defines objects that trigger a level reset when touched
 
 ## Gameplay
-1. Use keyboard arrow keys to move and push word blocks.
-2. Form valid sentences (e.g., "Baba Is You", "Flag Is Win", "Wall Is Stop") to change the game rules.
+1. Use wasd keys to move and push word blocks.
+2. Form valid sentences (e.g. "Wall Is Stop") to change the game rules.
 3. Complete the level by touching the object marked as "Win".
 
 ## Project Scope
-- 1 built-in test level (8x8 grid)
+- 4 built-in test level (8x8 grid)
 - Simple level editor (supports placing/deleting blocks, saving/loading custom levels)
 - Developed with Unity 2D Core (no complex physics or animations)
 
