@@ -118,7 +118,7 @@
         {"gridX": 2, "gridY": 2, "textType": "Property", "textContent": "You"},
         {"gridX": 0, "gridY": 1, "textType": "Noun", "textContent": "Rock"},
         {"gridX": 1, "gridY": 1, "textType": "Verb", "textContent": "Is"},
-        {"gridX": 2, "gridY": 1, "textType": "Noun", "textContent": "Wall"},
+        {"gridX": 3, "gridY": 1, "textType": "Noun", "textContent": "Wall"},
         {"gridX": 0, "gridY": 0, "textType": "Noun", "textContent": "Cherry"},
         {"gridX": 1, "gridY": 0, "textType": "Verb", "textContent": "Is"},
         {"gridX": 2, "gridY": 0, "textType": "Property", "textContent": "Win"}
